@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/mytheresa/go-hiring-challenge/models"
+	"github.com/mytheresa/go-hiring-challenge/app/product"
 )
 
 type Response struct {
@@ -17,10 +17,10 @@ type Product struct {
 }
 
 type CatalogHandler struct {
-	repo *models.ProductsRepository
+	repo product.Repository
 }
 
-func NewCatalogHandler(r *models.ProductsRepository) *CatalogHandler {
+func NewCatalogHandler(r product.Repository) *CatalogHandler {
 	return &CatalogHandler{
 		repo: r,
 	}
