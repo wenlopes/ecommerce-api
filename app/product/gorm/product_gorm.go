@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"github.com/mytheresa/go-hiring-challenge/app/product"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"gorm.io/gorm"
 )
@@ -15,7 +16,7 @@ func NewProductsRepository(db *gorm.DB) *ProductsRepository {
 	}
 }
 
-func (r *ProductsRepository) GetAllProducts(offset, limit int) ([]models.Product, int64, error) {
+func (r *ProductsRepository) GetAllProducts(offset, limit int, filters product.Filters) ([]models.Product, int64, error) {
 	var (
 		products []models.Product
 		total    int64
@@ -23,7 +24,21 @@ func (r *ProductsRepository) GetAllProducts(offset, limit int) ([]models.Product
 
 	baseQuery := r.db.Model(&models.Product{})
 
-	if err := baseQuery.Count(&total).Error; err != nil {
+	if filters.CategoryCode != "" {
+		baseQuery = baseQuery.
+			Joins("JOIN product_categories pc ON pc.product_id = products.id").
+			Joins("JOIN categories c ON c.id = pc.category_id").
+			Where("c.code = ?", filters.CategoryCode)
+	}
+
+	if filters.PriceLessThan != nil {
+		baseQuery = baseQuery.Where("products.price < ?", *filters.PriceLessThan)
+	}
+
+	countQuery := baseQuery.Session(&gorm.Session{})
+	if err := countQuery.
+		Distinct("products.id").
+		Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 

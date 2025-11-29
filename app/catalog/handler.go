@@ -2,7 +2,9 @@ package catalog
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
@@ -34,6 +36,25 @@ func NewCatalogHandler(r product.Repository) *CatalogHandler {
 	}
 }
 
+func (h *CatalogHandler) extractProductFilters(r *http.Request) (product.Filters, error) {
+	query := r.URL.Query()
+	var filters product.Filters
+
+	if categoryCode := query.Get("category"); categoryCode != "" {
+		filters.CategoryCode = categoryCode
+	}
+
+	if priceLtStr := query.Get("price_less_than"); priceLtStr != "" {
+		priceLt, err := strconv.ParseFloat(priceLtStr, 64)
+		if err != nil || priceLt < 0 {
+			return filters, fmt.Errorf("invalid price_less_than parameter")
+		}
+		filters.PriceLessThan = &priceLt
+	}
+
+	return filters, nil
+}
+
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	offset, limit, err := api.ExtractPagination(r, api.MaxLimit)
 	if err != nil {
@@ -41,7 +62,13 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	productsDB, total, err := h.repo.GetAllProducts(offset, limit)
+	filters, err := h.extractProductFilters(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	productsDB, total, err := h.repo.GetAllProducts(offset, limit, filters)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
