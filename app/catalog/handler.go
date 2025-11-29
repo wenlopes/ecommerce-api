@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 )
 
 type Response struct {
-	Products []Product `json:"products"`
+	Products   []Product      `json:"products"`
+	Pagination api.Pagination `json:"pagination"`
 }
 
 type Product struct {
@@ -33,20 +35,26 @@ func NewCatalogHandler(r product.Repository) *CatalogHandler {
 }
 
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
-	res, err := h.repo.GetAllProducts()
+	offset, limit, err := api.ExtractPagination(r, api.MaxLimit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	productsDB, total, err := h.repo.GetAllProducts(offset, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Map response
-	products := make([]Product, len(res))
-	for i, p := range res {
+	products := make([]Product, len(productsDB))
+	for i, p := range productsDB {
 		products[i] = Product{
 			Code:       p.Code,
 			Price:      p.Price.InexactFloat64(),
 			Categories: make([]Category, len(p.Categories)),
 		}
+
 		for j, c := range p.Categories {
 			products[i].Categories[j] = Category{
 				Code: c.Code,
@@ -55,11 +63,13 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Return the products as a JSON response
+	pagination := api.NewPagination(total, offset, limit)
+
 	w.Header().Set("Content-Type", "application/json")
 
 	response := Response{
-		Products: products,
+		Products:   products,
+		Pagination: pagination,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {

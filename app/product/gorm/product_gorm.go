@@ -15,15 +15,29 @@ func NewProductsRepository(db *gorm.DB) *ProductsRepository {
 	}
 }
 
-func (r *ProductsRepository) GetAllProducts() ([]models.Product, error) {
-	var products []models.Product
-	if err := r.db.
+func (r *ProductsRepository) GetAllProducts(offset, limit int) ([]models.Product, int64, error) {
+	var (
+		products []models.Product
+		total    int64
+	)
+
+	baseQuery := r.db.Model(&models.Product{})
+
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := baseQuery.
 		Preload("Variants").
 		Preload("Categories", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "code", "name")
 		}).
+		Order("id ASC").
+		Limit(limit).
+		Offset(offset).
 		Find(&products).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return products, nil
+
+	return products, total, nil
 }
