@@ -19,11 +19,18 @@ type Product struct {
 	Code       string     `json:"code"`
 	Price      float64    `json:"price"`
 	Categories []Category `json:"categories"`
+	Variants   []Variant  `json:"variants,omitempty"`
 }
 
 type Category struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
+}
+
+type Variant struct {
+	Name  string  `json:"name"`
+	SKU   string  `json:"sku"`
+	Price float64 `json:"price"`
 }
 
 type CatalogHandler struct {
@@ -100,6 +107,53 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("code")
+
+	if code == "" {
+		http.Error(w, "missing product code", http.StatusBadRequest)
+		return
+	}
+
+	productDB, err := h.repo.GetProductByCode(code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	product := Product{
+		Code:       productDB.Code,
+		Price:      productDB.Price.InexactFloat64(),
+		Categories: make([]Category, len(productDB.Categories)),
+		Variants:   make([]Variant, len(productDB.Variants)),
+	}
+
+	for j, c := range productDB.Categories {
+		product.Categories[j] = Category{
+			Code: c.Code,
+			Name: c.Name,
+		}
+	}
+
+	for k, v := range productDB.Variants {
+		product.Variants[k] = Variant{
+			Name: v.Name,
+			SKU:  v.SKU,
+		}
+		product.Variants[k].Price = v.Price.InexactFloat64()
+		if v.Price.IsZero() {
+			product.Variants[k].Price = product.Price
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(product); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

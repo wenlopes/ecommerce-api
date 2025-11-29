@@ -9,6 +9,7 @@ type Filters struct {
 
 type Reader interface {
 	GetAllProducts(offset, limit int, filters Filters) ([]models.Product, int64, error)
+	GetProductByCode(code string) (models.Product, error)
 }
 
 type Repository interface {

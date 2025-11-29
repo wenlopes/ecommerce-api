@@ -56,3 +56,15 @@ func (r *ProductsRepository) GetAllProducts(offset, limit int, filters product.F
 
 	return products, total, nil
 }
+
+func (r *ProductsRepository) GetProductByCode(code string) (models.Product, error) {
+	var product models.Product
+	err := r.db.
+		Preload("Variants").
+		Preload("Categories", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "code", "name")
+		}).
+		Where("code = ?", code).
+		First(&product).Error
+	return product, err
+}
