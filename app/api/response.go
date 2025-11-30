@@ -1,11 +1,30 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 )
 
-func OKResponse(w http.ResponseWriter, data any) {
+type ErrorBody struct {
+	Message string `json:"message"`
+}
+
+func OKResponse(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	if data == nil {
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func ErrorResponse(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	_ = json.NewEncoder(w).Encode(ErrorBody{
+		Message: message,
+	})
 }
