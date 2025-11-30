@@ -1,7 +1,6 @@
 package catalog
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -65,19 +64,21 @@ func (h *CatalogHandler) extractProductFilters(r *http.Request) (product.Filters
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	offset, limit, err := api.ExtractPagination(r, api.MaxLimit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	filters, err := h.extractProductFilters(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		api.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	productsDB, total, err := h.repo.GetAllProducts(offset, limit, filters)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// TODO: Log internal error
+		// TODO: Create a generic error message
+		api.ErrorResponse(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
@@ -99,30 +100,26 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	pagination := api.NewPagination(total, offset, limit)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	response := Response{
 		Products:   products,
 		Pagination: pagination,
 	}
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	api.OKResponse(w, http.StatusOK, response)
 }
 
 func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 
 	if code == "" {
-		http.Error(w, "missing product code", http.StatusBadRequest)
+		api.ErrorResponse(w, http.StatusBadRequest, "missing product code")
 		return
 	}
 
 	productDB, err := h.repo.GetProductByCode(code)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// TODO: distinguish not found error
+		api.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -151,10 +148,5 @@ func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(product); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	api.OKResponse(w, http.StatusOK, product)
 }

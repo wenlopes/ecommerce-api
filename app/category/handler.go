@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/mytheresa/go-hiring-challenge/app/api"
 )
 
 type Response struct {
@@ -29,7 +31,7 @@ func NewCategoryHandler(r Repository) *CategoryHandler {
 func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	categoriesDB, err := h.repo.GetAllCategories()
 	if err != nil {
-		http.Error(w, "Failed to retrieve categories", http.StatusInternalServerError)
+		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve categories")
 		return
 	}
 
@@ -45,17 +47,13 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		Categories: categories,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	api.OKResponse(w, http.StatusOK, resp)
 }
 
 func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	var cat Category
 	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		api.ErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -63,18 +61,19 @@ func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	cat.Name = strings.TrimSpace(cat.Name)
 
 	if cat.Code == "" || cat.Name == "" {
-		http.Error(w, "Both code and name are required", http.StatusBadRequest)
+		api.ErrorResponse(w, http.StatusBadRequest, "Both code and name are required")
 		return
 	}
 
 	if err := h.repo.CreateCategory(cat.Code, cat.Name); err != nil {
 		if errors.Is(err, ErrCategoryAlreadyExists) {
-			http.Error(w, "Category code already exists", http.StatusConflict)
+			api.ErrorResponse(w, http.StatusConflict, "Category already exists")
 			return
 		}
-		http.Error(w, "Failed to create category", http.StatusInternalServerError)
+
+		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to create category")
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	api.OKResponse(w, http.StatusCreated, cat)
 }
