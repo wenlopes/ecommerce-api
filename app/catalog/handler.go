@@ -76,9 +76,7 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	productsDB, total, err := h.repo.GetAllProducts(offset, limit, filters)
 	if err != nil {
-		// TODO: Log internal error
-		// TODO: Create a generic error message
-		api.ErrorResponse(w, http.StatusInternalServerError, "internal server error")
+		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve products")
 		return
 	}
 
@@ -112,13 +110,17 @@ func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request)
 	code := r.PathValue("code")
 
 	if code == "" {
-		api.ErrorResponse(w, http.StatusBadRequest, "missing product code")
+		api.ErrorResponse(w, http.StatusBadRequest, "Missing product code")
 		return
 	}
 
 	productDB, err := h.repo.GetProductByCode(code)
 	if err != nil {
-		// TODO: distinguish not found error
+		if err == product.ErrProductNotFound {
+			api.ErrorResponse(w, http.StatusNotFound, "Product not found")
+			return
+		}
+
 		api.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -33,12 +33,12 @@ func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 }
 
 func (r *CategoryRepository) CreateCategory(code, name string) error {
-	cat := models.Category{
+	c := models.Category{
 		Code: code,
 		Name: name,
 	}
 
-	if err := r.db.Create(&cat).Error; err != nil {
+	if err := r.db.Create(&c).Error; err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return category.ErrCategoryAlreadyExists

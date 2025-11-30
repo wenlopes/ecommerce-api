@@ -1,6 +1,8 @@
 package gorm
 
 import (
+	"errors"
+
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"gorm.io/gorm"
@@ -58,13 +60,22 @@ func (r *ProductsRepository) GetAllProducts(offset, limit int, filters product.F
 }
 
 func (r *ProductsRepository) GetProductByCode(code string) (models.Product, error) {
-	var product models.Product
+	var p models.Product
+
 	err := r.db.
 		Preload("Variants").
 		Preload("Categories", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "code", "name")
 		}).
 		Where("code = ?", code).
-		First(&product).Error
-	return product, err
+		First(&p).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return p, product.ErrProductNotFound
+		}
+		return p, err
+	}
+
+	return p, nil
 }
