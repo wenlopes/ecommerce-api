@@ -3,6 +3,7 @@ package category
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type Response struct {
@@ -48,4 +49,27 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
+	var cat Category
+	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	cat.Code = strings.TrimSpace(cat.Code)
+	cat.Name = strings.TrimSpace(cat.Name)
+
+	if cat.Code == "" || cat.Name == "" {
+		http.Error(w, "Both code and name are required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.CreateCategory(cat.Code, cat.Name); err != nil {
+		http.Error(w, "Failed to create category", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }

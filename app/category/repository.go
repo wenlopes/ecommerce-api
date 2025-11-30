@@ -6,6 +6,11 @@ type Reader interface {
 	GetAllCategories() ([]models.Category, error)
 }
 
+type Writer interface {
+	CreateCategory(code, name string) error
+}
+
 type Repository interface {
 	Reader
+	Writer
 }

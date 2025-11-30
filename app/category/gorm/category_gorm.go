@@ -26,3 +26,14 @@ func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 
 	return categories, nil
 }
+
+func (r *CategoryRepository) CreateCategory(code, name string) error {
+	cat := models.Category{
+		Code: code,
+		Name: name,
+	}
+	if err := r.db.Create(&cat).Error; err != nil {
+		return err
+	}
+	return nil
+}

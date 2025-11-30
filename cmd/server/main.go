@@ -48,6 +48,7 @@ func main() {
 	mux.HandleFunc("GET /catalog", catalog.HandleGet)
 	mux.HandleFunc("GET /catalog/{code}", catalog.HandleGetByCode)
 	mux.HandleFunc("GET /category", category.HandleGet)
+	mux.HandleFunc("POST /category", category.HandlePost)
 
 	// Set up the HTTP server
 	srv := &http.Server{
