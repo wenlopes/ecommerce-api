@@ -2,6 +2,7 @@ package category
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -67,6 +68,10 @@ func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.repo.CreateCategory(cat.Code, cat.Name); err != nil {
+		if errors.Is(err, ErrCategoryAlreadyExists) {
+			http.Error(w, "Category code already exists", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Failed to create category", http.StatusInternalServerError)
 		return
 	}

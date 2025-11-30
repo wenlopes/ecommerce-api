@@ -1,6 +1,11 @@
 package gorm
 
 import (
+	"errors"
+
+	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/mytheresa/go-hiring-challenge/app/category"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"gorm.io/gorm"
 )
@@ -32,8 +37,14 @@ func (r *CategoryRepository) CreateCategory(code, name string) error {
 		Code: code,
 		Name: name,
 	}
+
 	if err := r.db.Create(&cat).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return category.ErrCategoryAlreadyExists
+		}
 		return err
 	}
+
 	return nil
 }
