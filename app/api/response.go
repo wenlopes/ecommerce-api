@@ -6,7 +6,7 @@ import (
 )
 
 type ErrorBody struct {
-	Message string `json:"message"`
+	Error string `json:"error"`
 }
 
 func OKResponse(w http.ResponseWriter, status int, data any) {
@@ -25,6 +25,6 @@ func ErrorResponse(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 
 	_ = json.NewEncoder(w).Encode(ErrorBody{
-		Message: message,
+		Error: message,
 	})
 }
