@@ -15,6 +15,7 @@ import (
 	"github.com/mytheresa/go-hiring-challenge/app/category"
 	category_gorm "github.com/mytheresa/go-hiring-challenge/app/category/gorm"
 	"github.com/mytheresa/go-hiring-challenge/app/database"
+	"github.com/mytheresa/go-hiring-challenge/app/log/terminal"
 	product_gorm "github.com/mytheresa/go-hiring-challenge/app/product/gorm"
 )
 
@@ -38,8 +39,10 @@ func main() {
 	defer close()
 
 	// Initialize handlers
+	logger := terminal.NewTerminalLog()
+
 	prodRepo := product_gorm.NewProductsRepository(db)
-	catalog := catalog.NewCatalogHandler(prodRepo)
+	catalog := catalog.NewCatalogHandler(prodRepo, logger)
 
 	cateRepo := category_gorm.NewCategoryRepository(db)
 	category := category.NewCategoryHandler(cateRepo)

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
+	"github.com/mytheresa/go-hiring-challenge/app/log"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
@@ -16,12 +17,14 @@ type AllProductsResponse struct {
 }
 
 type CatalogHandler struct {
-	repo product.Repository
+	repo   product.Repository
+	logger log.Log
 }
 
-func NewCatalogHandler(r product.Repository) *CatalogHandler {
+func NewCatalogHandler(r product.Repository, logger log.Log) *CatalogHandler {
 	return &CatalogHandler{
-		repo: r,
+		repo:   r,
+		logger: logger,
 	}
 }
 
@@ -60,6 +63,9 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	productsDB, total, err := h.repo.GetAllProducts(offset, limit, filters)
 	if err != nil {
+		h.logger.Error("fetch_products_error", map[string]any{
+			"error": err.Error(),
+		})
 		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve products")
 		return
 	}

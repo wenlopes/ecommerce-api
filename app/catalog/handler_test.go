@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
+	logmock "github.com/mytheresa/go-hiring-challenge/app/log/mock"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 	productmock "github.com/mytheresa/go-hiring-challenge/app/product/mock"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
@@ -46,13 +47,19 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repoErr := errors.New("Failed to retrieve product data")
+		repoErr := errors.New("Error connecting to database")
 		repo := productmock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			GetAllProducts(0, api.DefaultLimit, product.Filters{}).
 			Return(nil, int64(0), repoErr)
 
-		handler := NewCatalogHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		logger.EXPECT().
+			Error("fetch_products_error", map[string]any{
+				"error": repoErr.Error(),
+			})
+
+		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/products", nil)
 		recorder := httptest.NewRecorder()
@@ -89,7 +96,8 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 				return []models.Product{productModel}, total, nil
 			})
 
-		handler := NewCatalogHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/products?category=cat-001&price_less_than=25.5&offset=5&limit=2", nil)
 		recorder := httptest.NewRecorder()
@@ -140,7 +148,8 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 			GetProductByCode("ABC").
 			Return(models.Product{}, product.ErrProductNotFound)
 
-		handler := NewCatalogHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/product/ABC", nil)
 		req.SetPathValue("code", "ABC")
@@ -163,7 +172,8 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 			GetProductByCode("XYZ").
 			Return(models.Product{}, repoErr)
 
-		handler := NewCatalogHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/product/XYZ", nil)
 		req.SetPathValue("code", "XYZ")
@@ -200,7 +210,8 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 			GetProductByCode(productModel.Code).
 			Return(productModel, nil)
 
-		handler := NewCatalogHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/product/SKU-001", nil)
 		req.SetPathValue("code", "SKU-001")
