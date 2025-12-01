@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	categorymock "github.com/mytheresa/go-hiring-challenge/app/category/mock"
-	logmock "github.com/mytheresa/go-hiring-challenge/app/log/mock"
+	category_mock "github.com/mytheresa/go-hiring-challenge/app/category/mock"
+	log_mock "github.com/mytheresa/go-hiring-challenge/app/log/mock"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/stretchr/testify/assert"
@@ -21,13 +21,13 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repo := categorymock.NewMockRepository(ctrl)
+		repo := category_mock.NewMockRepository(ctrl)
 		repoErr := errors.New("db down")
 		repo.EXPECT().
 			GetAllCategories().
 			Return(nil, repoErr)
 
-		logger := logmock.NewMockLog(ctrl)
+		logger := log_mock.NewMockLog(ctrl)
 		logger.EXPECT().
 			Error("fetch_categories_error", map[string]any{
 				"error": repoErr.Error(),
@@ -52,12 +52,12 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 			{Code: "cat-002", Name: "Shoes"},
 		}
 
-		repo := categorymock.NewMockRepository(ctrl)
+		repo := category_mock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			GetAllCategories().
 			Return(categories, nil)
 
-		logger := logmock.NewMockLog(ctrl)
+		logger := log_mock.NewMockLog(ctrl)
 		handler := NewCategoryHandler(repo, logger)
 		req := httptest.NewRequest(http.MethodGet, "/categories", nil)
 		recorder := httptest.NewRecorder()
@@ -108,12 +108,12 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repo := categorymock.NewMockRepository(ctrl)
+		repo := category_mock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			CreateCategory("cat-001", "Tops").
 			Return(models.Category{}, ErrCategoryAlreadyExists)
 
-		logger := logmock.NewMockLog(ctrl)
+		logger := log_mock.NewMockLog(ctrl)
 		handler := NewCategoryHandler(repo, logger)
 
 		body := bytes.NewBufferString(`{"code":"cat-001","name":"Tops"}`)
@@ -130,13 +130,13 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repo := categorymock.NewMockRepository(ctrl)
+		repo := category_mock.NewMockRepository(ctrl)
 		repoErr := errors.New("db down")
 		repo.EXPECT().
 			CreateCategory("cat-009", "Accessories").
 			Return(models.Category{}, repoErr)
 
-		logger := logmock.NewMockLog(ctrl)
+		logger := log_mock.NewMockLog(ctrl)
 		logger.EXPECT().
 			Error("create_category_error", map[string]any{
 				"error": repoErr.Error(),
@@ -158,12 +158,12 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repo := categorymock.NewMockRepository(ctrl)
+		repo := category_mock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			CreateCategory("cat-555", "Dresses").
 			Return(models.Category{Code: "cat-555", Name: "Dresses"}, nil)
 
-		logger := logmock.NewMockLog(ctrl)
+		logger := log_mock.NewMockLog(ctrl)
 		handler := NewCategoryHandler(repo, logger)
 
 		body := bytes.NewBufferString(`{"code":" cat-555 ","name":" Dresses "}`)
