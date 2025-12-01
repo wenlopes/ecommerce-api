@@ -10,7 +10,7 @@ import (
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
 
-type Response struct {
+type AllCategoriesResponse struct {
 	Categories []wire_out.Category `json:"categories"`
 }
 
@@ -41,7 +41,7 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp := Response{
+	resp := AllCategoriesResponse{
 		Categories: categories,
 	}
 

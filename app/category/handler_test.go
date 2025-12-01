@@ -59,7 +59,7 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
-		var resp Response
+		var resp AllCategoriesResponse
 		if err := json.Unmarshal(recorder.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
