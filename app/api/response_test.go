@@ -18,7 +18,7 @@ func TestOKResponse(t *testing.T) {
 
 	t.Run("succesful http200 json response", func(t *testing.T) {
 		recorder := httptest.NewRecorder()
-		OKResponse(recorder, sample)
+		OKResponse(recorder, http.StatusOK, sample)
 
 		assert.Equal(t, http.StatusOK, recorder.Code, "Expected status code 200 OK")
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"), "Expected Content-Type to be application/json")

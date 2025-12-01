@@ -19,6 +19,7 @@ This repository contains a Go application for managing products and their prices
 1. Create a github/bitbucket/gitlab repository and push all this code as-is.
 2. Create a new branch, and provide a pull-request against the main branch with your changes. Instructions to follow.
 
+
 ## Application Setup
 
 - Ensure you have Go installed on your machine.
