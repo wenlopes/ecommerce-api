@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/catalog"
 	"github.com/mytheresa/go-hiring-challenge/app/category"
 	category_gorm "github.com/mytheresa/go-hiring-challenge/app/category/gorm"
@@ -43,17 +44,13 @@ func main() {
 	cateRepo := category_gorm.NewCategoryRepository(db)
 	category := category.NewCategoryHandler(cateRepo)
 
-	// Set up routing
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /catalog", catalog.HandleGet)
-	mux.HandleFunc("GET /catalog/{code}", catalog.HandleGetByCode)
-	mux.HandleFunc("GET /category", category.HandleGet)
-	mux.HandleFunc("POST /category", category.HandlePost)
-
 	// Set up the HTTP server
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("localhost:%s", os.Getenv("HTTP_PORT")),
-		Handler: mux,
+		Addr: fmt.Sprintf("localhost:%s", os.Getenv("HTTP_PORT")),
+		Handler: api.NewMuxRouter(api.Handlers{
+			Catalog:  catalog,
+			Category: category,
+		}),
 	}
 
 	// Start the server
