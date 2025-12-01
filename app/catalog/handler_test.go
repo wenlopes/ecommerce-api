@@ -10,6 +10,7 @@ import (
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 	productmock "github.com/mytheresa/go-hiring-challenge/app/product/mock"
+	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -98,7 +99,7 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
-		var got Response
+		var got AllProductsResponse
 		if err := json.Unmarshal(recorder.Body.Bytes(), &got); err != nil {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
@@ -106,7 +107,7 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 		if assert.Len(t, got.Products, 1) {
 			assert.Equal(t, productModel.Code, got.Products[0].Code)
 			assert.Equal(t, productModel.Price.InexactFloat64(), got.Products[0].Price)
-			assert.Equal(t, []Category{
+			assert.Equal(t, []wire_out.Category{
 				{Code: "cat-001", Name: "T-Shirts"},
 				{Code: "cat-003", Name: "Sale"},
 			}, got.Products[0].Categories)
@@ -212,7 +213,7 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 		}
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
-		var got Product
+		var got wire_out.Product
 		if err := json.Unmarshal(recorder.Body.Bytes(), &got); err != nil {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}

@@ -7,29 +7,12 @@ import (
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
+	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
 
-type Response struct {
-	Products   []Product      `json:"products"`
-	Pagination api.Pagination `json:"pagination"`
-}
-
-type Product struct {
-	Code       string     `json:"code"`
-	Price      float64    `json:"price"`
-	Categories []Category `json:"categories"`
-	Variants   []Variant  `json:"variants,omitempty"`
-}
-
-type Category struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-}
-
-type Variant struct {
-	Name  string  `json:"name"`
-	SKU   string  `json:"sku"`
-	Price float64 `json:"price"`
+type AllProductsResponse struct {
+	Products   []wire_out.Product `json:"products"`
+	Pagination api.Pagination     `json:"pagination"`
 }
 
 type CatalogHandler struct {
@@ -81,16 +64,16 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products := make([]Product, len(productsDB))
+	products := make([]wire_out.Product, len(productsDB))
 	for i, p := range productsDB {
-		products[i] = Product{
+		products[i] = wire_out.Product{
 			Code:       p.Code,
 			Price:      p.Price.InexactFloat64(),
-			Categories: make([]Category, len(p.Categories)),
+			Categories: make([]wire_out.Category, len(p.Categories)),
 		}
 
 		for j, c := range p.Categories {
-			products[i].Categories[j] = Category{
+			products[i].Categories[j] = wire_out.Category{
 				Code: c.Code,
 				Name: c.Name,
 			}
@@ -99,7 +82,7 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 	pagination := api.NewPagination(total, offset, limit)
 
-	response := Response{
+	response := AllProductsResponse{
 		Products:   products,
 		Pagination: pagination,
 	}
@@ -127,22 +110,22 @@ func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	product := Product{
+	product := wire_out.Product{
 		Code:       productDB.Code,
 		Price:      productDB.Price.InexactFloat64(),
-		Categories: make([]Category, len(productDB.Categories)),
-		Variants:   make([]Variant, len(productDB.Variants)),
+		Categories: make([]wire_out.Category, len(productDB.Categories)),
+		Variants:   make([]wire_out.Variant, len(productDB.Variants)),
 	}
 
 	for j, c := range productDB.Categories {
-		product.Categories[j] = Category{
+		product.Categories[j] = wire_out.Category{
 			Code: c.Code,
 			Name: c.Name,
 		}
 	}
 
 	for k, v := range productDB.Variants {
-		product.Variants[k] = Variant{
+		product.Variants[k] = wire_out.Variant{
 			Name: v.Name,
 			SKU:  v.SKU,
 		}
