@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/app/product"
 	productmock "github.com/mytheresa/go-hiring-challenge/app/product/mock"
 	"github.com/mytheresa/go-hiring-challenge/models"
@@ -14,6 +15,107 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
+
+func TestCatalogHandler_HandleGet(t *testing.T) {
+	t.Run("invalid pagination parameter", func(t *testing.T) {
+		handler := &CatalogHandler{}
+
+		req := httptest.NewRequest(http.MethodGet, "/catalog/products?offset=foo", nil)
+		recorder := httptest.NewRecorder()
+
+		handler.HandleGet(recorder, req)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"invalid offset parameter"}`, recorder.Body.String())
+	})
+
+	t.Run("invalid price filter", func(t *testing.T) {
+		handler := &CatalogHandler{}
+
+		req := httptest.NewRequest(http.MethodGet, "/catalog/products?price_less_than=-1", nil)
+		recorder := httptest.NewRecorder()
+
+		handler.HandleGet(recorder, req)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"invalid price_less_than parameter"}`, recorder.Body.String())
+	})
+
+	t.Run("repository error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		t.Cleanup(ctrl.Finish)
+
+		repoErr := errors.New("database offline")
+		repo := productmock.NewMockRepository(ctrl)
+		repo.EXPECT().
+			GetAllProducts(0, api.DefaultLimit, product.Filters{}).
+			Return(nil, int64(0), repoErr)
+
+		handler := NewCatalogHandler(repo)
+
+		req := httptest.NewRequest(http.MethodGet, "/catalog/products", nil)
+		recorder := httptest.NewRecorder()
+
+		handler.HandleGet(recorder, req)
+
+		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+		assert.JSONEq(t, `{"error":"Failed to retrieve products"}`, recorder.Body.String())
+	})
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		t.Cleanup(ctrl.Finish)
+
+		productModel := models.Product{
+			Code:  "SKU-001",
+			Price: decimal.RequireFromString("19.99"),
+			Categories: []models.Category{
+				{Code: "cat-001", Name: "T-Shirts"},
+				{Code: "cat-003", Name: "Sale"},
+			},
+		}
+
+		repo := productmock.NewMockRepository(ctrl)
+		total := int64(7)
+		repo.EXPECT().
+			GetAllProducts(5, 2, gomock.Any()).
+			DoAndReturn(func(offset, limit int, filters product.Filters) ([]models.Product, int64, error) {
+				assert.Equal(t, "cat-001", filters.CategoryCode)
+				if assert.NotNil(t, filters.PriceLessThan) {
+					assert.Equal(t, 25.5, *filters.PriceLessThan)
+				}
+
+				return []models.Product{productModel}, total, nil
+			})
+
+		handler := NewCatalogHandler(repo)
+
+		req := httptest.NewRequest(http.MethodGet, "/catalog/products?category=cat-001&price_less_than=25.5&offset=5&limit=2", nil)
+		recorder := httptest.NewRecorder()
+
+		handler.HandleGet(recorder, req)
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+
+		var got Response
+		if err := json.Unmarshal(recorder.Body.Bytes(), &got); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+
+		if assert.Len(t, got.Products, 1) {
+			assert.Equal(t, productModel.Code, got.Products[0].Code)
+			assert.Equal(t, productModel.Price.InexactFloat64(), got.Products[0].Price)
+			assert.Equal(t, []Category{
+				{Code: "cat-001", Name: "T-Shirts"},
+				{Code: "cat-003", Name: "Sale"},
+			}, got.Products[0].Categories)
+			assert.Nil(t, got.Products[0].Variants)
+		}
+
+		assert.Equal(t, api.NewPagination(total, 5, 2), got.Pagination)
+	})
+}
 
 func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 	t.Run("MissingCode", func(t *testing.T) {
