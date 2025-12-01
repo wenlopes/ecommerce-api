@@ -112,6 +112,9 @@ func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
+		h.logger.Error("fetch_product_by_code_error", map[string]any{
+			"error": err.Error(),
+		})
 		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve product data")
 		return
 	}

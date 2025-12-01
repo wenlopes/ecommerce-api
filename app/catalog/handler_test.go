@@ -162,7 +162,7 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 	})
 
 	t.Run("RepositoryError", func(t *testing.T) {
-		repoErr := errors.New("Failed to retrieve product data")
+		repoErr := errors.New("Error connecting to database")
 
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
@@ -173,6 +173,10 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 			Return(models.Product{}, repoErr)
 
 		logger := logmock.NewMockLog(ctrl)
+		logger.EXPECT().
+			Error("fetch_product_by_code_error", map[string]any{
+				"error": repoErr.Error(),
+			})
 		handler := NewCatalogHandler(repo, logger)
 
 		req := httptest.NewRequest(http.MethodGet, "/catalog/product/XYZ", nil)
@@ -182,7 +186,7 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 		handler.HandleGetByCode(recorder, req)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-		assert.JSONEq(t, `{"error":"`+repoErr.Error()+`"}`, recorder.Body.String())
+		assert.JSONEq(t, `{"error":"Failed to retrieve product data"}`, recorder.Body.String())
 	})
 
 	t.Run("Success", func(t *testing.T) {
