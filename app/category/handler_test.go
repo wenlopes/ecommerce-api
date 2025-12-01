@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	categorymock "github.com/mytheresa/go-hiring-challenge/app/category/mock"
+	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -63,7 +64,7 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
 
-		assert.Equal(t, []Category{
+		assert.Equal(t, []wire_out.Category{
 			{Code: "cat-001", Name: "T-Shirts"},
 			{Code: "cat-002", Name: "Shoes"},
 		}, resp.Categories)
@@ -158,11 +159,11 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, recorder.Code)
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 
-		var resp Category
+		var resp wire_out.Category
 		if err := json.Unmarshal(recorder.Body.Bytes(), &resp); err != nil {
 			t.Fatalf("failed to unmarshal response: %v", err)
 		}
 
-		assert.Equal(t, Category{Code: "cat-555", Name: "Dresses"}, resp)
+		assert.Equal(t, wire_out.Category{Code: "cat-555", Name: "Dresses"}, resp)
 	})
 }

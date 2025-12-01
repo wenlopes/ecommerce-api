@@ -7,15 +7,11 @@ import (
 	"strings"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
+	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
 
 type Response struct {
-	Categories []Category `json:"categories"`
-}
-
-type Category struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
+	Categories []wire_out.Category `json:"categories"`
 }
 
 type CategoryHandler struct {
@@ -37,9 +33,9 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categories := make([]Category, len(categoriesDB))
+	categories := make([]wire_out.Category, len(categoriesDB))
 	for i, catDB := range categoriesDB {
-		categories[i] = Category{
+		categories[i] = wire_out.Category{
 			Code: catDB.Code,
 			Name: catDB.Name,
 		}
@@ -54,7 +50,7 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 // HandlePost handles the HTTP POST request for creating a new category.
 func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	var cat Category
+	var cat wire_out.Category
 	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {
 		api.ErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
 		return

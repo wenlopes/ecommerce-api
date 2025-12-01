@@ -7,11 +7,6 @@ type Product struct {
 	Variants   []Variant  `json:"variants,omitempty"`
 }
 
-type Category struct {
-	Code string `json:"code"`
-	Name string `json:"name"`
-}
-
 type Variant struct {
 	Name  string  `json:"name"`
 	SKU   string  `json:"sku"`
