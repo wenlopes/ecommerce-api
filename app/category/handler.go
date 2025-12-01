@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
+	"github.com/mytheresa/go-hiring-challenge/app/log"
 	wire_in "github.com/mytheresa/go-hiring-challenge/app/wire/in"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
@@ -16,13 +17,15 @@ type AllCategoriesResponse struct {
 }
 
 type CategoryHandler struct {
-	repo Repository
+	repo   Repository
+	logger log.Log
 }
 
 // NewCategoryHandler creates a new instance of CategoryHandler.
-func NewCategoryHandler(r Repository) *CategoryHandler {
+func NewCategoryHandler(r Repository, logger log.Log) *CategoryHandler {
 	return &CategoryHandler{
-		repo: r,
+		repo:   r,
+		logger: logger,
 	}
 }
 
@@ -30,6 +33,9 @@ func NewCategoryHandler(r Repository) *CategoryHandler {
 func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	categoriesDB, err := h.repo.GetAllCategories()
 	if err != nil {
+		h.logger.Error("fetch_categories_error", map[string]any{
+			"error": err.Error(),
+		})
 		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve categories")
 		return
 	}
@@ -73,6 +79,9 @@ func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		h.logger.Error("create_category_error", map[string]any{
+			"error": err.Error(),
+		})
 		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to create category")
 		return
 	}

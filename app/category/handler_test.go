@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	categorymock "github.com/mytheresa/go-hiring-challenge/app/category/mock"
+	logmock "github.com/mytheresa/go-hiring-challenge/app/log/mock"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,13 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 			GetAllCategories().
 			Return(nil, repoErr)
 
-		handler := NewCategoryHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		logger.EXPECT().
+			Error("fetch_categories_error", map[string]any{
+				"error": repoErr.Error(),
+			})
+
+		handler := NewCategoryHandler(repo, logger)
 		req := httptest.NewRequest(http.MethodGet, "/categories", nil)
 		recorder := httptest.NewRecorder()
 
@@ -50,7 +57,8 @@ func TestCategoryHandler_HandleGet(t *testing.T) {
 			GetAllCategories().
 			Return(categories, nil)
 
-		handler := NewCategoryHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCategoryHandler(repo, logger)
 		req := httptest.NewRequest(http.MethodGet, "/categories", nil)
 		recorder := httptest.NewRecorder()
 
@@ -105,7 +113,8 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 			CreateCategory("cat-001", "Tops").
 			Return(models.Category{}, ErrCategoryAlreadyExists)
 
-		handler := NewCategoryHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCategoryHandler(repo, logger)
 
 		body := bytes.NewBufferString(`{"code":"cat-001","name":"Tops"}`)
 		req := httptest.NewRequest(http.MethodPost, "/categories", body)
@@ -127,7 +136,13 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 			CreateCategory("cat-009", "Accessories").
 			Return(models.Category{}, repoErr)
 
-		handler := NewCategoryHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		logger.EXPECT().
+			Error("create_category_error", map[string]any{
+				"error": repoErr.Error(),
+			})
+
+		handler := NewCategoryHandler(repo, logger)
 
 		body := bytes.NewBufferString(`{"code":"cat-009","name":"Accessories"}`)
 		req := httptest.NewRequest(http.MethodPost, "/categories", body)
@@ -148,7 +163,8 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 			CreateCategory("cat-555", "Dresses").
 			Return(models.Category{Code: "cat-555", Name: "Dresses"}, nil)
 
-		handler := NewCategoryHandler(repo)
+		logger := logmock.NewMockLog(ctrl)
+		handler := NewCategoryHandler(repo, logger)
 
 		body := bytes.NewBufferString(`{"code":" cat-555 ","name":" Dresses "}`)
 		req := httptest.NewRequest(http.MethodPost, "/categories", body)

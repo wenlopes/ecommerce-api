@@ -45,7 +45,7 @@ func main() {
 	catalog := catalog.NewCatalogHandler(prodRepo, logger)
 
 	cateRepo := category_gorm.NewCategoryRepository(db)
-	category := category.NewCategoryHandler(cateRepo)
+	category := category.NewCategoryHandler(cateRepo, logger)
 
 	// Set up the HTTP server
 	srv := &http.Server{
