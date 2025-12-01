@@ -103,7 +103,7 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		repo := categorymock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			CreateCategory("cat-001", "Tops").
-			Return(ErrCategoryAlreadyExists)
+			Return(models.Category{}, ErrCategoryAlreadyExists)
 
 		handler := NewCategoryHandler(repo)
 
@@ -125,7 +125,7 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		repoErr := errors.New("db down")
 		repo.EXPECT().
 			CreateCategory("cat-009", "Accessories").
-			Return(repoErr)
+			Return(models.Category{}, repoErr)
 
 		handler := NewCategoryHandler(repo)
 
@@ -146,7 +146,7 @@ func TestCategoryHandler_HandlePost(t *testing.T) {
 		repo := categorymock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			CreateCategory("cat-555", "Dresses").
-			Return(nil)
+			Return(models.Category{Code: "cat-555", Name: "Dresses"}, nil)
 
 		handler := NewCategoryHandler(repo)
 

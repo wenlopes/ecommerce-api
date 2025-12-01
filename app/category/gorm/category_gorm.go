@@ -35,19 +35,22 @@ func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 }
 
 // CreateCategory creates a new category in the database.
-func (r *CategoryRepository) CreateCategory(code, name string) error {
+func (r *CategoryRepository) CreateCategory(code, name string) (models.Category, error) {
 	c := models.Category{
 		Code: code,
 		Name: name,
 	}
 
-	if err := r.db.Create(&c).Error; err != nil {
+	err := r.db.Create(&c).Error
+	if err != nil {
 		var pgErr *pgconn.PgError
+
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return category.ErrCategoryAlreadyExists
+			return models.Category{}, category.ErrCategoryAlreadyExists
 		}
-		return err
+
+		return models.Category{}, err
 	}
 
-	return nil
+	return c, nil
 }

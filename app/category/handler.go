@@ -51,22 +51,23 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 // HandlePost handles the HTTP POST request for creating a new category.
 func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	var cat wire_in.Category
+	var req wire_in.Category
 
-	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.ErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	cat.Code = strings.TrimSpace(cat.Code)
-	cat.Name = strings.TrimSpace(cat.Name)
+	req.Code = strings.TrimSpace(req.Code)
+	req.Name = strings.TrimSpace(req.Name)
 
-	if cat.Code == "" || cat.Name == "" {
+	if req.Code == "" || req.Name == "" {
 		api.ErrorResponse(w, http.StatusBadRequest, "Both code and name are required")
 		return
 	}
 
-	if err := h.repo.CreateCategory(cat.Code, cat.Name); err != nil {
+	created, err := h.repo.CreateCategory(req.Code, req.Name)
+	if err != nil {
 		if errors.Is(err, ErrCategoryAlreadyExists) {
 			api.ErrorResponse(w, http.StatusConflict, "Category already exists")
 			return
@@ -76,5 +77,10 @@ func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.OKResponse(w, http.StatusCreated, cat)
+	category := wire_out.Category{
+		Code: created.Code,
+		Name: created.Name,
+	}
+
+	api.OKResponse(w, http.StatusCreated, category)
 }

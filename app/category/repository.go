@@ -7,7 +7,7 @@ type Reader interface {
 }
 
 type Writer interface {
-	CreateCategory(code, name string) error
+	CreateCategory(code, name string) (models.Category, error)
 }
 
 type Repository interface {
