@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
+	wire_in "github.com/mytheresa/go-hiring-challenge/app/wire/in"
 	wire_out "github.com/mytheresa/go-hiring-challenge/app/wire/out"
 )
 
@@ -50,7 +51,8 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 // HandlePost handles the HTTP POST request for creating a new category.
 func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	var cat wire_out.Category
+	var cat wire_in.Category
+
 	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {
 		api.ErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
 		return
