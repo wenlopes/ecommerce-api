@@ -22,12 +22,14 @@ type CategoryHandler struct {
 	repo Repository
 }
 
+// NewCategoryHandler creates a new instance of CategoryHandler.
 func NewCategoryHandler(r Repository) *CategoryHandler {
 	return &CategoryHandler{
 		repo: r,
 	}
 }
 
+// HandleGet handles the HTTP GET request for retrieving all categories.
 func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	categoriesDB, err := h.repo.GetAllCategories()
 	if err != nil {
@@ -50,6 +52,7 @@ func (h *CategoryHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	api.OKResponse(w, http.StatusOK, resp)
 }
 
+// HandlePost handles the HTTP POST request for creating a new category.
 func (h *CategoryHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	var cat Category
 	if err := json.NewDecoder(r.Body).Decode(&cat); err != nil {

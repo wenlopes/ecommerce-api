@@ -14,12 +14,14 @@ type CategoryRepository struct {
 	db *gorm.DB
 }
 
+// NewCategoryRepository creates a new instance of CategoryRepository.
 func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{
 		db: db,
 	}
 }
 
+// GetAllCategories retrieves all categories from the database.
 func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 	var categories []models.Category
 	if err := r.db.
@@ -32,6 +34,7 @@ func (r *CategoryRepository) GetAllCategories() ([]models.Category, error) {
 	return categories, nil
 }
 
+// CreateCategory creates a new category in the database.
 func (r *CategoryRepository) CreateCategory(code, name string) error {
 	c := models.Category{
 		Code: code,

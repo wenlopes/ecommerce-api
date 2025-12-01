@@ -12,12 +12,14 @@ type ProductsRepository struct {
 	db *gorm.DB
 }
 
+// NewProductsRepository creates a new instance of ProductsRepository.
 func NewProductsRepository(db *gorm.DB) *ProductsRepository {
 	return &ProductsRepository{
 		db: db,
 	}
 }
 
+// GetAllProducts retrieves products from the database with optional filters, pagination, and returns the total count.
 func (r *ProductsRepository) GetAllProducts(offset, limit int, filters product.Filters) ([]models.Product, int64, error) {
 	var (
 		products []models.Product
@@ -59,6 +61,7 @@ func (r *ProductsRepository) GetAllProducts(offset, limit int, filters product.F
 	return products, total, nil
 }
 
+// GetProductByCode retrieves a product by its code, including its variants and categories.
 func (r *ProductsRepository) GetProductByCode(code string) (models.Product, error) {
 	var p models.Product
 

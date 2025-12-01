@@ -61,6 +61,7 @@ func (h *CatalogHandler) extractProductFilters(r *http.Request) (product.Filters
 	return filters, nil
 }
 
+// HandleGet handles the HTTP GET request for retrieving products with optional filters and pagination.
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	offset, limit, err := api.ExtractPagination(r, api.MaxLimit)
 	if err != nil {
@@ -106,6 +107,7 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	api.OKResponse(w, http.StatusOK, response)
 }
 
+// HandleGetByCode handles the HTTP GET request for retrieving a product by its code.
 func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
 

@@ -22,6 +22,7 @@ type Pagination struct {
 	HasPrev    bool  `json:"has_prev"`
 }
 
+// ExtractPagination extracts pagination parameters from the HTTP request.
 func ExtractPagination(r *http.Request, maxLimit int) (offset, limit int, err error) {
 	query := r.URL.Query()
 
@@ -58,6 +59,7 @@ func ExtractPagination(r *http.Request, maxLimit int) (offset, limit int, err er
 	return offset, limit, nil
 }
 
+// NewPagination creates a new Pagination struct based on the total number of items, offset, and limit.
 func NewPagination(total int64, offset, limit int) Pagination {
 	if limit < 1 {
 		limit = DefaultLimit
