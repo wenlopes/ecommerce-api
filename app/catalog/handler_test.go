@@ -8,29 +8,12 @@ import (
 	"testing"
 
 	"github.com/mytheresa/go-hiring-challenge/app/product"
+	productmock "github.com/mytheresa/go-hiring-challenge/app/product/mock"
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
-
-type mockProductRepository struct {
-	getAllProductsFn   func(offset, limit int, filters product.Filters) ([]models.Product, int64, error)
-	getProductByCodeFn func(code string) (models.Product, error)
-}
-
-func (m mockProductRepository) GetAllProducts(offset, limit int, filters product.Filters) ([]models.Product, int64, error) {
-	if m.getAllProductsFn != nil {
-		return m.getAllProductsFn(offset, limit, filters)
-	}
-	return nil, 0, nil
-}
-
-func (m mockProductRepository) GetProductByCode(code string) (models.Product, error) {
-	if m.getProductByCodeFn != nil {
-		return m.getProductByCodeFn(code)
-	}
-	return models.Product{}, nil
-}
 
 func TestCatalogHandler_HandleGetByCode_MissingCode(t *testing.T) {
 	handler := &CatalogHandler{}
@@ -45,11 +28,14 @@ func TestCatalogHandler_HandleGetByCode_MissingCode(t *testing.T) {
 }
 
 func TestCatalogHandler_HandleGetByCode_NotFound(t *testing.T) {
-	repo := mockProductRepository{
-		getProductByCodeFn: func(code string) (models.Product, error) {
-			return models.Product{}, product.ErrProductNotFound
-		},
-	}
+	ctrl := gomock.NewController(t)
+	t.Cleanup(ctrl.Finish)
+
+	repo := productmock.NewMockRepository(ctrl)
+	repo.EXPECT().
+		GetProductByCode("ABC").
+		Return(models.Product{}, product.ErrProductNotFound)
+
 	handler := NewCatalogHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/catalog/product/ABC", nil)
@@ -64,11 +50,14 @@ func TestCatalogHandler_HandleGetByCode_NotFound(t *testing.T) {
 
 func TestCatalogHandler_HandleGetByCode_RepositoryError(t *testing.T) {
 	repoErr := errors.New("database offline")
-	repo := mockProductRepository{
-		getProductByCodeFn: func(code string) (models.Product, error) {
-			return models.Product{}, repoErr
-		},
-	}
+	ctrl := gomock.NewController(t)
+	t.Cleanup(ctrl.Finish)
+
+	repo := productmock.NewMockRepository(ctrl)
+	repo.EXPECT().
+		GetProductByCode("XYZ").
+		Return(models.Product{}, repoErr)
+
 	handler := NewCatalogHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/catalog/product/XYZ", nil)
@@ -98,14 +87,14 @@ func TestCatalogHandler_HandleGetByCode_Success(t *testing.T) {
 		},
 	}
 
-	repo := mockProductRepository{
-		getProductByCodeFn: func(code string) (models.Product, error) {
-			if code != productModel.Code {
-				t.Fatalf("expected product code %s, got %s", productModel.Code, code)
-			}
-			return productModel, nil
-		},
-	}
+	ctrl := gomock.NewController(t)
+	t.Cleanup(ctrl.Finish)
+
+	repo := productmock.NewMockRepository(ctrl)
+	repo.EXPECT().
+		GetProductByCode(productModel.Code).
+		Return(productModel, nil)
+
 	handler := NewCatalogHandler(repo)
 
 	req := httptest.NewRequest(http.MethodGet, "/catalog/product/SKU-001", nil)
