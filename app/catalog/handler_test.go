@@ -27,7 +27,7 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 		handler.HandleGet(recorder, req)
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.JSONEq(t, `{"error":"invalid offset parameter"}`, recorder.Body.String())
+		assert.JSONEq(t, `{"error":"Failed to parse pagination parameters"}`, recorder.Body.String())
 	})
 
 	t.Run("invalid price filter", func(t *testing.T) {
@@ -46,7 +46,7 @@ func TestCatalogHandler_HandleGet(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)
 
-		repoErr := errors.New("database offline")
+		repoErr := errors.New("Failed to retrieve product data")
 		repo := productmock.NewMockRepository(ctrl)
 		repo.EXPECT().
 			GetAllProducts(0, api.DefaultLimit, product.Filters{}).
@@ -153,7 +153,7 @@ func TestCatalogHandler_HandleGetByCode(t *testing.T) {
 	})
 
 	t.Run("RepositoryError", func(t *testing.T) {
-		repoErr := errors.New("database offline")
+		repoErr := errors.New("Failed to retrieve product data")
 
 		ctrl := gomock.NewController(t)
 		t.Cleanup(ctrl.Finish)

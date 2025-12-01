@@ -48,7 +48,7 @@ func (h *CatalogHandler) extractProductFilters(r *http.Request) (product.Filters
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	offset, limit, err := api.ExtractPagination(r, api.MaxLimit)
 	if err != nil {
-		api.ErrorResponse(w, http.StatusBadRequest, err.Error())
+		api.ErrorResponse(w, http.StatusBadRequest, "Failed to parse pagination parameters")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *CatalogHandler) HandleGetByCode(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		api.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		api.ErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve product data")
 		return
 	}
 
